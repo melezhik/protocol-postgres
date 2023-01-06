@@ -9,7 +9,6 @@ tasks:
     -
       name: install-pg
     code: |
-
       use v6.d;
       use Protocol::Postgres;
 
