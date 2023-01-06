@@ -1,0 +1,54 @@
+tasks:
+  -
+    name: int-test
+    default: true
+    langauge: Raku
+    depends:
+    -
+      name: install
+    -
+      name: install-pg
+    code: |
+
+      use v6.d;
+      use Protocol::Postgres;
+
+      my $socket = await IO::Socket::Async.connect("localhost");
+      my $client = Protocol::Postgres::Client.new;
+      $socket.Supply(:bin).act({ $client.incoming-data($^data) });
+      $client.outbound-data.act({ $socket.write($^data) });
+
+      await $client.startup($user, $database, $password);
+
+      my $resultset = await $client.query('SELECT * FROM bar WHERE id = $1', 42);
+      react {
+        whenever $resultset.hash-rows -> (:$name, :$description) {
+          say "$name is $description";
+        }
+      }
+  -
+    name: install
+    language: Bash
+    code: |
+      set -e
+      cd source/
+      zef install . --/test
+  -
+    name: install-pg
+    plugin: sparkyci-service-postgresql
+    followup:
+    -
+      name: create-table
+    config:
+      db_name: testdb
+      db_user: testuser
+      db_pass: testpass
+  -
+    name: create-table
+    language: Bash
+    code: |
+      set -e
+      export PGPASSWORD=testpass
+      psql -d testdb -U testuser -c "create table bar(name text, description text, id int)" -h localhost      
+      psql -d testdb -U testuser -c "insert into bar(name, description, id) values('Raku','Programming Language', 42)" -h localhost      
+    
