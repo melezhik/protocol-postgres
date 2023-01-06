@@ -12,12 +12,12 @@ tasks:
       use v6.d;
       use Protocol::Postgres;
 
-      my $socket = await IO::Socket::Async.connect("localhost");
+      my $socket = await IO::Socket::Async.connect("localhost",5432);
       my $client = Protocol::Postgres::Client.new;
       $socket.Supply(:bin).act({ $client.incoming-data($^data) });
       $client.outbound-data.act({ $socket.write($^data) });
 
-      await $client.startup($user, $database, $password);
+      await $client.startup("testuser", "testdb", "testpass");
 
       my $resultset = await $client.query('SELECT * FROM bar WHERE id = $1', 42);
       react {
