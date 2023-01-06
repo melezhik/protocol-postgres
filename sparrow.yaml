@@ -21,7 +21,7 @@ tasks:
 
       my $resultset = await $client.query('SELECT * FROM bar WHERE id = $1', 42);
       react {
-        whenever $resultset.hash-rows -> (:$name, :$description) {
+        whenever $resultset.hash-rows -> (:$name, :$description, :$id) {
           say "$name is $description";
         }
       }
@@ -50,4 +50,5 @@ tasks:
       export PGPASSWORD=testpass
       psql -d testdb -U testuser -c "create table bar(name text, description text, id int)" -h localhost      
       psql -d testdb -U testuser -c "insert into bar(name, description, id) values('Raku','Programming Language', 42)" -h localhost      
+      psql -d testdb -U testuser -c "select name, description, id from bar" -h localhost      
     
